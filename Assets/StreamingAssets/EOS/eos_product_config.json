@@ -1,0 +1,38 @@
+{
+  "ProductName": "bullet sponge",
+  "ProductId": "7f6f1f250813414fbaaff911c0c74f50",
+  "ProductVersion": "1.0.0",
+  "imported": true,
+  "Clients": [
+    {
+      "Value": {
+        "ClientId": "xyza7891RjXbp7LlCSVWf3AGP19DE7Xw",
+        "ClientSecret": "J0Vx+Z2bqWQVnkjlx5IirVxsLlNekshlXKG6w/APGD4",
+        "EncryptionKey": "FB6BC1244C66112E737019660D53304526DF725C6BA6AAA8E195233466FBB5F9"
+      },
+      "Name": "Client"
+    }
+  ],
+  "Environments": {
+    "Deployments": [
+      {
+        "Value": {
+          "SandboxId": {
+            "Value": "3223c708126c4f12ba4e2afc7943063d"
+          },
+          "DeploymentId": "309326c3dc524948a3ea727c88069c9b"
+        },
+        "Name": "Deployment"
+      }
+    ],
+    "Sandboxes": [
+      {
+        "Value": {
+          "Value": "3223c708126c4f12ba4e2afc7943063d"
+        },
+        "Name": "Sandbox"
+      }
+    ]
+  },
+  "schemaVersion": "1.0"
+}

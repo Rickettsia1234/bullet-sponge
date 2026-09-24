@@ -16,6 +16,10 @@ public class GameSystem : MonoBehaviour
     private void OnClientCountChanged(ulong clientId)
     {
         OnNetworkStateChanged?.Invoke();
+        if (clientId != NetworkManager.Singleton.LocalClientId || networkRoll == NetworkRoll.Client)
+        {
+            StartTime = Time.time;
+        }
     }
 
     private SessionState sessionState = SessionState.Idle;
@@ -71,10 +75,22 @@ public class GameSystem : MonoBehaviour
         }
     }
 
-    public int PlayerCount => NetworkManager.Singleton.ConnectedClientsIds.Count;
-    public bool IsListening => NetworkManager.Singleton.IsListening;
-    public ulong LocalClientId => NetworkManager.Singleton.LocalClientId;
-    public bool IsHost => NetworkManager.Singleton.IsHost;
+    private string playerName = "";
+    public string PlayerName
+    {
+        get => playerName;
+        set => playerName = value;
+    }
+
+    public float StartTime { get; private set; }
+    public float ClearTime { get; private set; }
+
+    private SceneName currentScene = SceneName.Main;
+
+    public void RecordClearTime()
+    {
+        ClearTime = Time.time - StartTime;
+    }
 
     private void Awake()
     {
@@ -91,9 +107,10 @@ public class GameSystem : MonoBehaviour
 
     private void Start()
     {
+        Application.targetFrameRate = 60;
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientCountChanged;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientCountChanged;
-        sceneController.ChangeScene(SceneName.Main);
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        ChangeScene(SceneName.Main);
     }
 
     private void OnDestroy()
@@ -101,7 +118,19 @@ public class GameSystem : MonoBehaviour
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientCountChanged;
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientCountChanged;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        OnNetworkStateChanged?.Invoke();
+        if (currentScene == SceneName.Game)
+        {
+            if (!NetworkManager.Singleton.IsServer || clientId == NetworkManager.Singleton.LocalClientId)
+            {
+                NetworkRoll = NetworkRoll.None;
+            }
         }
     }
 
@@ -154,5 +183,11 @@ public class GameSystem : MonoBehaviour
         {
             JoinRoom(JoinCode, onComplete);
         }
+    }
+
+    public void ChangeScene(SceneName sceneName)
+    {
+        currentScene = sceneName;
+        sceneController.ChangeScene(sceneName);
     }
 }

@@ -19,16 +19,18 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (IsOwner)
-        {
-            CinemachineCamera cinemachineCamera = FindAnyObjectByType<CinemachineCamera>();
-            cinemachineCamera.Target.TrackingTarget = transform;
-        }
     }
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+    }
+
+    private Vector2 spawnPoint = Vector2.zero;
+
+    public void SetSpawnPoint(Vector2 newSpawnPoint)
+    {
+        spawnPoint = newSpawnPoint;
     }
 
     private void Update()
@@ -43,15 +45,48 @@ public class PlayerController : NetworkBehaviour
             if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) moveX -= 1f;
             if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) moveX += 1f;
 
-            bool isGrounded = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
+            Vector2 checkPosition = (Vector2)transform.position + Vector2.down * 0.55f;
+            Vector2 boxSize = new Vector2(0.8f, 0.1f);
+            Collider2D[] colliders = Physics2D.OverlapBoxAll(checkPosition, boxSize, 0f, groundLayer);
+            bool isGrounded = false;
 
-            if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+            foreach (Collider2D col in colliders)
+            {
+                if (col.gameObject != gameObject)
+                {
+                    isGrounded = true;
+                    break;
+                }
+            }
+
+            if (Keyboard.current.spaceKey.isPressed && isGrounded)
             {
                 jumpThisFrame = true;
             }
         }
 
+        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            RespawnServerRpc(spawnPoint);
+        }
+
+        /*
+        if (Keyboard.current.wKey.isPressed)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+        }
+        */
+
         SubmitInputServerRpc(moveX, jumpThisFrame);
+    }
+
+    [ServerRpc]
+    private void RespawnServerRpc(Vector2 targetPoint)
+    {
+        transform.position = targetPoint;
+        rb.position = targetPoint;
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
     }
 
     [ServerRpc]

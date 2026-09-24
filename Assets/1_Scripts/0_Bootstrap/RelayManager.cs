@@ -19,13 +19,19 @@ public class RelayManager : MonoBehaviour
 
     private async UniTaskVoid EnsureEOSLogin()
     {
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.GetComponent<UnityTransport>() != null)
+        await UniTask.WaitUntil(() => NetworkManager.Singleton != null);
+
+        if (NetworkManager.Singleton.GetComponent<UnityTransport>() != null)
         {
             loginTaskSource.TrySetResult();
             return;
         }
 
-        await UniTask.WaitUntil(() => EOSManager.Instance != null);
+        if (EOSManager.Instance == null)
+        {
+            loginTaskSource.TrySetResult();
+            return;
+        }
 
         while (true)
         {
